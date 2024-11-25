@@ -24,12 +24,14 @@ Public Class Form1
     Dim IgnoreClose As Boolean = False
     Dim Load_comp_F As Boolean = False
     Dim brdy = 0
+    Dim cpuArchitecture As Integer = 0
 
     <System.Runtime.InteropServices.DllImport("winmm.dll", CharSet:=System.Runtime.InteropServices.CharSet.Auto)>
     Private Shared Function mciSendString(ByVal command As String,
     ByVal buffer As System.Text.StringBuilder,
     ByVal bufferSize As Integer, ByVal hwndCallback As IntPtr) As Integer
     End Function
+
 
     Private mysound As String = "mysound3"
     Private aliasName As String = "MediaFile"
@@ -80,7 +82,7 @@ Public Class Form1
     End Function
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
+        GetArchitecture()
         Surround1.Interval = interval
         Surround2.Interval = interval
         DemoTimer.Interval = interval
@@ -89,7 +91,11 @@ Public Class Form1
         If System.IO.File.Exists(fileName) Then
             Label37.Text = System.IO.File.GetLastWriteTime(fileName).ToString
         Else
-            Dim result As DialogResult = MessageBox.Show("Supermodel.exe not found." & vbCrLf & "Want you download PonMi version of Supermodel3?",
+            Dim downloadMessage = "PonMi version of Supermodel3?"
+            If (cpuArchitecture = 12) Then
+                downloadMessage = "mijk84 ARM64 Supermodel3 build?"
+            End If
+            Dim result As DialogResult = MessageBox.Show("Supermodel.exe not found." & vbCrLf & "Do you want to download " & downloadMessage,
                                              "質問",
                                              MessageBoxButtons.YesNo,
                                              MessageBoxIcon.Exclamation,
@@ -194,8 +200,25 @@ Public Class Form1
     End Sub
 
 
+    Private Sub GetArchitecture()
+        ' pulls out the cpu arch 
+        ' https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-processor
+        Dim WinMgmts As Object
+        Dim cpu As Object
+        Dim cpuAarchitecture = 0
+        WinMgmts = GetObject("WinMgmts:").instancesof("Win32_Processor")
+        For Each cpu In WinMgmts
+            cpuArchitecture = cpu.Architecture
+        Next
+    End Sub
+
+
     Private Sub download()
-        System.Diagnostics.Process.Start("https://github.com/BackPonBeauty/Supermodel3-PonMi/releases")
+        Dim releaseURL = "https://github.com/BackPonBeauty/Supermodel3-PonMi/releases"
+        If (cpuArchitecture = 12) Then
+            releaseURL = "https://github.com/mijk84/win-arm64-binaries/releases/tag/supermodel"
+        End If
+        System.Diagnostics.Process.Start(releaseURL)
     End Sub
 
 
@@ -557,17 +580,18 @@ Public Class Form1
     Private Sub LoadResolution()
         Dim line As String = ""
         Dim al As New ArrayList
-
-        Using sr As StreamReader = New StreamReader(
+        If (File.Exists("Resolution.txt")) Then
+            Using sr As StreamReader = New StreamReader(
           "Resolution.txt", Encoding.GetEncoding("UTF-8"))
 
-            line = sr.ReadLine()
-            Do Until line Is Nothing
-                ComboBox_resolution.Items.Add(line)
                 line = sr.ReadLine()
-            Loop
-            ComboBox_resolution.SelectedIndex = Resolution_index_bin
-        End Using
+                Do Until line Is Nothing
+                    ComboBox_resolution.Items.Add(line)
+                    line = sr.ReadLine()
+                Loop
+                ComboBox_resolution.SelectedIndex = Resolution_index_bin
+            End Using
+        End If
     End Sub
 
     Private Sub LastSelectRow()
