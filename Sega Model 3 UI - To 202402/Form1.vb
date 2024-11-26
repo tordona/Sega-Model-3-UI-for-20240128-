@@ -1001,6 +1001,11 @@ Public Class Form1
             If New3DEngine.ToString() = "True" Or New3DEngine.ToString() = "1" Then
                 RadioButton_new3d.Checked = True
                 RadioButton_legacy.Checked = False
+            ElseIf (cpuArchitecture = 12) Then
+                ' ARM64
+                RadioButton_new3d.Checked = True
+                RadioButton_legacy.Checked = False
+                RadioButton_legacy.Enabled = False
             Else
                 RadioButton_new3d.Checked = False
                 RadioButton_legacy.Checked = True
